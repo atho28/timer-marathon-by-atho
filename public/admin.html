@@ -63,9 +63,18 @@
     <h1>Marathon Timer Control by Athoillah</h1>
     <div id="controls"></div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         const socket = io();
+
+		// Tambahkan ini untuk mengecek koneksi di Inspect Console
+		socket.on('connect', () => {
+    	console.log('Terhubung ke server Railway!');
+		});
+
+		socket.on('connect_error', (err) => {
+    	console.log('Gagal konek:', err);
+		});		
         let localTimers = {};
         let isRendered = false;
 
