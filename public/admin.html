@@ -62,38 +62,39 @@
 <body>
     <h1>Marathon Timer Control by Athoillah</h1>
     <div id="controls"></div>
-	<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-<script>
-    const socket = io({
-        transports: ['polling', 'websocket'] // Polling dulu sebagai cadangan jika WS gagal
-    });
 
-    socket.on('connect', () => {
-        console.log('Terhubung ke Railway!');
-        socket.emit('requestSync');
-    });
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
 
-    socket.on('sync', (data) => {
-        // Logika render UI kamu di sini
-    });
-    
-    container.innerHTML = '';
-    for (let id in data) {
-      const t = data[id];
-      const div = document.createElement('div');
-      div.className = 'card';
-      div.style = "background:#222; color:white; padding:15px; margin:10px; border-radius:10px; border: 1px solid #444;";
-      div.innerHTML = `
-        <h3>${t.name}</h3>
-        <div style="display:flex; gap:10px;">
-          <button onclick="socket.emit('controlTimer',{id:'${id}',command:'start'})">START</button>
-          <button onclick="socket.emit('controlTimer',{id:'${id}',command:'pause'})">PAUSE</button>
-          <button onclick="socket.emit('controlTimer',{id:'${id}',command:'reset'})">RESET</button>
-        </div>
-      `;
-      container.appendChild(div);
-    }
-  });
-</script>
+        socket.on('connect', () => {
+            console.log('Koneksi Berhasil!');
+            socket.emit('requestSync');
+        });
+
+        socket.on('sync', (data) => {
+            console.log('Data diterima:', data);
+            const container = document.getElementById('controls');
+            if (!container) return;
+
+            container.innerHTML = '';
+            for (let id in data) {
+                const t = data[id];
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <h3>${t.name}</h3>
+                    <button class="btn-start" onclick="sendControl('${id}', 'start')">START</button>
+                    <button class="btn-pause" onclick="sendControl('${id}', 'pause')">PAUSE</button>
+                    <button class="btn-reset" onclick="sendControl('${id}', 'reset')">RESET</button>
+                `;
+                container.appendChild(div);
+            }
+        });
+
+        function sendControl(id, command) {
+            socket.emit('controlTimer', { id, command });
+        }
+    </script>
 </body>
 </html>
