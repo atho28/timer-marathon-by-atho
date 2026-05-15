@@ -1,19 +1,18 @@
 const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const path = require('path');
-
 const app = express();
+const http = require('http');
 const server = http.createServer(app);
+const { Server } = require("socket.io");
 
-// Inisialisasi Socket.io dengan CORS yang longgar untuk hosting
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
-  }
+  },
+  allowEIO3: true // Menambah kompatibilitas
 });
 
+const path = require('path');
 app.use(express.static(path.join(__dirname, 'public')));
 
 let timers = {
@@ -23,9 +22,7 @@ let timers = {
 };
 
 io.on('connection', (socket) => {
-  console.log('User connected');
-  
-  // Kirim data saat admin baru masuk
+  console.log('Koneksi baru:', socket.id);
   socket.emit('sync', timers);
 
   socket.on('requestSync', () => {
@@ -33,25 +30,24 @@ io.on('connection', (socket) => {
   });
 
   socket.on('controlTimer', (data) => {
-    const { id, command, manualTime, newName } = data;
-    let t = timers[id];
-    if (!t) return;
-
-    if (command === 'start' && !t.isRunning) {
-      t.startTime = Date.now();
-      t.isRunning = true;
-    } else if (command === 'pause' && t.isRunning) {
-      t.elapsed += Date.now() - t.startTime;
-      t.isRunning = false;
-    } else if (command === 'reset') {
-      timers[id] = { ...timers[id], startTime: null, elapsed: 0, isRunning: false };
+    const { id, command } = data;
+    if (timers[id]) {
+        if (command === 'start' && !timers[id].isRunning) {
+            timers[id].startTime = Date.now();
+            timers[id].isRunning = true;
+        } else if (command === 'pause' && timers[id].isRunning) {
+            timers[id].elapsed += Date.now() - timers[id].startTime;
+            timers[id].isRunning = false;
+        } else if (command === 'reset') {
+            timers[id].elapsed = 0;
+            timers[id].isRunning = false;
+        }
+        io.emit('sync', timers);
     }
-    io.emit('sync', timers);
   });
 });
 
-// PENTING: Gunakan PORT dari Railway
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server Pro berjalan di port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
