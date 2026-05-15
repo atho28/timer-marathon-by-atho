@@ -65,7 +65,9 @@
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        const socket = io();
+        const socket = io({
+  		transports: ['websocket', 'polling']
+		});
 
 		// Tambahkan ini untuk mengecek koneksi di Inspect Console
 		socket.on('connect', () => {
