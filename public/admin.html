@@ -66,61 +66,82 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         const socket = io();
-let localTimers = {};
+        let localTimers = {};
+        let isRendered = false;
 
-    socket.on('sync', (data) => {
-        console.log('Data diterima:', data);
-        localTimers = data;
-        const container = document.getElementById('controls');
-        if (!container) return;
-
-        container.innerHTML = '';
-        for (let id in data) {
-            const t = data[id];
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h3 style="margin:0">${t.name}</h3>
-                        <div id="display-${id}" style="font-size: 2em; font-family: monospace; color: #00ff00; margin: 10px 0;">00:00:00</div>
-                    </div>
-                    <div>
-                        <button class="btn-start" onclick="sendControl('${id}', 'start')">START</button>
-                        <button class="btn-pause" onclick="sendControl('${id}', 'pause')">PAUSE</button>
-                        <button class="btn-reset" onclick="sendControl('${id}', 'reset')">RESET</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
-        }
-    });
-
-    // FUNGSI UNTUK MENGHITUNG DAN MENAMPILKAN ANGKA JALAN
-    function updateDisplays() {
-        for (let id in localTimers) {
-            const t = localTimers[id];
-            const el = document.getElementById(`display-${id}`);
-            if (!el) continue;
-
-            let totalMs = t.elapsed;
-            if (t.isRunning && t.startTime) {
-                totalMs += Date.now() - t.startTime;
+        socket.on('sync', (data) => { 
+            localTimers = data; 
+            if (!isRendered) {
+                initialRender();
+                isRendered = true;
             }
+        });
 
-            const hours = Math.floor(totalMs / 3600000);
-            const minutes = Math.floor((totalMs % 3600000) / 60000);
-            const seconds = Math.floor((totalMs % 60000) / 1000);
-            
-            el.innerText = 
-                String(hours).padStart(2, '0') + ":" + 
-                String(minutes).padStart(2, '0') + ":" + 
-                String(seconds).padStart(2, '0');
+        // Hanya menggambar struktur kartu SEKALI saja
+        function initialRender() {
+            const container = document.getElementById('controls');
+            container.innerHTML = '';
+            for (let id in localTimers) {
+                const t = localTimers[id];
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <div style="margin-bottom: 15px; width: 100%;">
+                        <label style="font-size: 30px; color: #FFFF;">Nama Kategori :</label>
+                        <input type="text" id="name-${id}" class="name-input" value="${t.name}" oninput="updateCategoryName('${id}')">
+                    </div>
+                    <input type="text" id="input-${id}" class="timer-val" value="00:00:00">
+                    <div class="btn-group">
+                        <button class="btn-start" onclick="send('${id}', 'start')">START</button>
+                        <button class="btn-pause" onclick="send('${id}', 'pause')">PAUSE</button>
+                        <button class="btn-edit" onclick="manualEdit('${id}')">SET</button>
+                        <button class="btn-reset" onclick="send('${id}', 'reset')">RESET</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
         }
-    }
 
-    // Jalankan update angka setiap 0.1 detik
-    setInterval(updateDisplays, 100);
+        // Fungsi ini hanya memperbarui angka, tanpa menulis ulang HTML (Anti-Refresh)
+        function updateTimerValues() {
+            for (let id in localTimers) {
+                const inputElement = document.getElementById(`input-${id}`);
+                // Hanya update jika admin sedang tidak mengetik/fokus di kotak timer tersebut
+                if (document.activeElement !== inputElement) {
+                    inputElement.value = format(getMs(id));
+                }
+            }
+        }
+
+        function getMs(id) {
+            let t = localTimers[id];
+            return t.elapsed + (t.isRunning ? Date.now() - t.startTime : 0);
+        }
+
+        function format(ms) {
+            let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
+            let m = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+            let s = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        function send(id, command) { socket.emit('controlTimer', { id, command }); }
+
+        function updateCategoryName(id) {
+            const newName = document.getElementById(`name-${id}`).value;
+            socket.emit('controlTimer', { id, command: 'updateName', newName: newName });
+        }
+
+        function manualEdit(id) {
+            const val = document.getElementById(`input-${id}`).value;
+            const parts = val.split(':');
+            if(parts.length !== 3) return alert("Format: hh:mm:ss");
+            const ms = (parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2])) * 1000;
+            socket.emit('controlTimer', { id, command: 'edit', manualTime: ms });
+        }
+
+        // Jalankan update angka setiap 100ms agar smooth tapi tidak merusak input
+        setInterval(updateTimerValues, 100);
     </script>
 </body>
 </html>
