@@ -63,46 +63,34 @@
     <h1>Marathon Timer Control by Athoillah</h1>
     <div id="controls"></div>
 
-    <script src="/socket.io/socket.io.js"></script>
-
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 <script>
-  // Jangan isi URL apapun di dalam io()
   const socket = io(); 
 
-  let localTimers = {};
-
   socket.on('connect', () => {
-    console.log('Terhubung! ID:', socket.id);
+    console.log('Terhubung!');
+    socket.emit('requestSync');
   });
 
   socket.on('sync', (data) => {
-    console.log('Data diterima:', data);
-    localTimers = data;
-    renderUI();
-  });
-
-  function renderUI() {
     const container = document.getElementById('controls');
-    if(!container) return;
-    container.innerHTML = '';
+    if (!container) return;
     
-    for (let id in localTimers) {
-      const t = localTimers[id];
+    container.innerHTML = '';
+    for (let id in data) {
+      const t = data[id];
       const div = document.createElement('div');
-      div.style = "background: #222; margin: 10px; padding: 15px; border-radius: 8px; border: 1px solid #444";
+      div.className = 'card';
+      div.style = "background:#222; color:white; padding:15px; margin:10px; border-radius:10px;";
       div.innerHTML = `
-        <h3 style="color: white">${t.name}</h3>
-        <button onclick="send('${id}', 'start')" style="background: green; color: white">START</button>
-        <button onclick="send('${id}', 'pause')" style="background: orange;">PAUSE</button>
-        <button onclick="send('${id}', 'reset')" style="background: red; color: white">RESET</button>
+        <h3>${t.name}</h3>
+        <button onclick="socket.emit('controlTimer',{id:'${id}',command:'start'})">START</button>
+        <button onclick="socket.emit('controlTimer',{id:'${id}',command:'pause'})">PAUSE</button>
+        <button onclick="socket.emit('controlTimer',{id:'${id}',command:'reset'})">RESET</button>
       `;
       container.appendChild(div);
     }
-  }
-
-  function send(id, command) {
-    socket.emit('controlTimer', { id, command });
-  }
+  });
 </script>
 </body>
 </html>
