@@ -65,10 +65,7 @@
 
     <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
     <script>
-    const socket = io({
-    	transports: ['polling', 'websocket'], // Utamakan polling dulu agar koneksi stabil awal
-    	upgrade: true
-	});
+    const socket = io(); // Cukup begini saja jika sudah menggunakan link CDN yang benar
 
 		// Tambahkan ini untuk mengecek koneksi di Inspect Console
 		socket.on('connect', () => {
