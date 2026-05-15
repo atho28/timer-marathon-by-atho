@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Display Vmix - Center Aligned</title>
+    <style>
+        body { 
+            background-color: #000000; 
+            color: #ffffff; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            padding: 0;
+            height: 100vh; /* Mengambil seluruh tinggi layar */
+            display: flex;
+            justify-content: center; /* Mengetengahkan secara horizontal */
+            align-items: center;     /* Mengetengahkan secara vertikal */
+            overflow: hidden;
+        }
+        
+
+    #display-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px; 
+        width: 90%; /* Memberi sedikit ruang di pinggir layar */
+    }
+
+    .timer-row { 
+        display: flex; 
+        flex-direction: row; /* Kembali ke baris, bukan kolom */
+        align-items: center; 
+        justify-content: flex-start; /* Container utama mulai dari kiri */
+        border-bottom: 1px solid #222; /* Garis tipis antar kategori */
+        padding: 10px 0;
+    }
+
+    .label { 
+        font-size: 24px; 
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #aaaaaa;
+        text-align: left; /* Teks label rata kiri */
+        flex: 0 0 30%; /* Label mengambil 30% lebar layar (tetap/fixed) */
+        padding-left: 50px; /* Jarak dari pinggir layar kiri */
+    }
+
+    .time { 
+        font-size: 120px; 
+        font-weight: bold; 
+        font-variant-numeric: tabular-nums;
+        flex: 1; /* Mengambil seluruh sisa ruang yang ada */
+        text-align: center; /* Mengetengahkan angka di sisa ruang tersebut */
+        margin-right: 30%; /* Offset penyeimbang agar angka benar-benar di tengah page */
+    }
+
+    .milidetik {
+        font-size: 45px;
+        color: #666;
+    }
+    
+
+        #font-panel { 
+            position: fixed; 
+            top: 200px; 
+            left: 150px; 
+            background: rgba(45, 45, 45, 0.8); 
+            padding: 10px; 
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        select {
+            background: #111;
+            color: white;
+            border: 1px solid #555;
+            padding: 5px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="display-container"></div>
+
+    <div id="font-panel">
+        <label style="font-size: 10px;">FONT:</label>
+        <select id="font-selector" onchange="changeFont(this.value)">
+            <optgroup label="Standard Windows">
+                <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Arial Black', sans-serif">Arial Black</option>
+                <option value="Impact, sans-serif">Impact</option>
+            </optgroup>
+            <optgroup label="Digital">
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="Consolas, monospace">Consolas</option>
+				<option value="monserrat">Monserrat</option>
+            </optgroup>
+        </select>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let localTimers = {};
+
+        socket.on('sync', (data) => { localTimers = data; });
+
+        function changeFont(font) {
+            document.body.style.fontFamily = font;
+        }
+
+        function update() {
+            const container = document.getElementById('display-container');
+            let content = '';
+            
+            for (let id in localTimers) {
+                let t = localTimers[id];
+                let ms = t.elapsed + (t.isRunning ? Date.now() - t.startTime : 0);
+                
+                let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
+                let m = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+                let s = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+                let ms_digit = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
+
+                content += `
+                    <div class="timer-row">
+                        <div class="label">${t.name}</div>
+                        <div class="time">
+                            ${h}:${m}:${s}<span class="milidetik">.${ms_digit}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = content;
+            requestAnimationFrame(update);
+        }
+        update();
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Struktur data untuk 3 kategori
+let timers = {
+    cat1: { startTime: null, elapsed: 0, isRunning: false, name: "Kategori A" },
+    cat2: { startTime: null, elapsed: 0, isRunning: false, name: "Kategori B" },
+    cat3: { startTime: null, elapsed: 0, isRunning: false, name: "Kategori C" }
+};
+
+// ... kode setup server lainnya tetap sama ...
+
+io.on('connection', (socket) => {
+    socket.emit('sync', timers);
+
+    socket.on('controlTimer', (data) => {
+        const { id, command, manualTime, newName } = data; 
+        let t = timers[id];
+
+        if (command === 'start' && !t.isRunning) {
+            t.startTime = Date.now();
+            t.isRunning = true;
+        } else if (command === 'pause' && t.isRunning) {
+            t.elapsed += Date.now() - t.startTime;
+            t.isRunning = false;
+        } else if (command === 'reset') {
+            timers[id] = { ...timers[id], startTime: null, elapsed: 0, isRunning: false };
+        } else if (command === 'edit') {
+            t.elapsed = manualTime;
+            t.startTime = t.isRunning ? Date.now() : null;
+        } else if (command === 'updateName') {
+            // Fitur baru: Update nama kategori
+            t.name = newName;
+        }
+        io.emit('sync', timers);
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));

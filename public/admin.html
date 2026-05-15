@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Master Admin Control</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #121212; 
+            color: #e0e0e0; 
+            padding: 30px;
+			justify-content: center; /* Mengetengahkan secara horizontal */
+            align-items: center;     /* Mengetengahkan secara vertikal */
+        }
+        .card { 
+            background: #1e1e1e; 
+            padding: 25px; 
+            margin-bottom: 25px;
+			margin-right: 200px;
+			min-width: 120px;
+            border-radius: 12px; 
+            border-left: 6px solid #3d5afe; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+			display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+        }
+        .name-input {
+            background: White-Grey; 
+            border: 1px #555; 
+            color: #000; 
+            font-size: 2rem;
+			font-weight; bold;
+			align:center;			
+            padding: 5px; 
+            width: 80%;
+            border-radius: 5px;
+        }
+        .timer-val { 
+            font-size: 60px; 
+            font-family: 'Tahoma', monospace; 
+            color: #00ff00; 
+            background: #000; 
+            padding: 30px 120px; 
+            border-radius: 8px; 
+            border: 2px solid #333; 
+            width: 300px; 
+            text-align: center;
+        }
+        button { 
+            padding: 12px 24px; cursor: pointer; border: none; border-radius: 8px; 
+            font-weight: bold; transition: all 0.2s;
+        }
+        button:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .btn-start { background: #2e7d32; color: white; }
+        .btn-pause { background: #ffa000; color: #000; }
+        .btn-edit { background: #0288d1; color: white; }
+        .btn-reset { background: #c62828; color: white; }
+        .btn-group { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Marathon Timer Control by Athoillah</h1>
+    <div id="controls"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let localTimers = {};
+        let isRendered = false;
+
+        socket.on('sync', (data) => { 
+            localTimers = data; 
+            if (!isRendered) {
+                initialRender();
+                isRendered = true;
+            }
+        });
+
+        // Hanya menggambar struktur kartu SEKALI saja
+        function initialRender() {
+            const container = document.getElementById('controls');
+            container.innerHTML = '';
+            for (let id in localTimers) {
+                const t = localTimers[id];
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <div style="margin-bottom: 15px; width: 100%;">
+                        <label style="font-size: 30px; color: #FFFF;">Nama Kategori :</label>
+                        <input type="text" id="name-${id}" class="name-input" value="${t.name}" oninput="updateCategoryName('${id}')">
+                    </div>
+                    <input type="text" id="input-${id}" class="timer-val" value="00:00:00">
+                    <div class="btn-group">
+                        <button class="btn-start" onclick="send('${id}', 'start')">START</button>
+                        <button class="btn-pause" onclick="send('${id}', 'pause')">PAUSE</button>
+                        <button class="btn-edit" onclick="manualEdit('${id}')">SET</button>
+                        <button class="btn-reset" onclick="send('${id}', 'reset')">RESET</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        // Fungsi ini hanya memperbarui angka, tanpa menulis ulang HTML (Anti-Refresh)
+        function updateTimerValues() {
+            for (let id in localTimers) {
+                const inputElement = document.getElementById(`input-${id}`);
+                // Hanya update jika admin sedang tidak mengetik/fokus di kotak timer tersebut
+                if (document.activeElement !== inputElement) {
+                    inputElement.value = format(getMs(id));
+                }
+            }
+        }
+
+        function getMs(id) {
+            let t = localTimers[id];
+            return t.elapsed + (t.isRunning ? Date.now() - t.startTime : 0);
+        }
+
+        function format(ms) {
+            let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
+            let m = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+            let s = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        function send(id, command) { socket.emit('controlTimer', { id, command }); }
+
+        function updateCategoryName(id) {
+            const newName = document.getElementById(`name-${id}`).value;
+            socket.emit('controlTimer', { id, command: 'updateName', newName: newName });
+        }
+
+        function manualEdit(id) {
+            const val = document.getElementById(`input-${id}`).value;
+            const parts = val.split(':');
+            if(parts.length !== 3) return alert("Format: hh:mm:ss");
+            const ms = (parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2])) * 1000;
+            socket.emit('controlTimer', { id, command: 'edit', manualTime: ms });
+        }
+
+        // Jalankan update angka setiap 100ms agar smooth tapi tidak merusak input
+        setInterval(updateTimerValues, 100);
+    </script>
+</body>
+</html>
