@@ -73,7 +73,7 @@
 		socket.on('connect', () => {
     	console.log('Terhubung ke server Railway!');
 		});
-
+		socket.emit('requestSync'); // Tambahkan baris ini
 		socket.on('connect_error', (err) => {
     	console.log('Gagal konek:', err);
 		});		
