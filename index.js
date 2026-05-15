@@ -1,15 +1,15 @@
 const express = require('express');
 const app = express();
 const http = require('http');
-const server = http.createServer(app);
 const { Server } = require("socket.io");
 const path = require('path');
 
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-// Memastikan folder public terbaca benar
+// Middleware untuk file statis
 app.use(express.static(path.join(__dirname, 'public')));
 
 let timers = {
@@ -38,14 +38,15 @@ io.on('connection', (socket) => {
       } else if (command === 'reset') {
         timers[id].elapsed = 0;
         timers[id].isRunning = false;
+        timers[id].startTime = null;
       }
       io.emit('sync', timers);
     }
   });
 });
 
-// PENTING: Railway butuh port ini untuk menghilangkan 502 Bad Gateway
+// PENTING: Gunakan 0.0.0.0 agar bisa diakses dari luar Railway
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
