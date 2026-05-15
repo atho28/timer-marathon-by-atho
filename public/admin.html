@@ -63,94 +63,48 @@
     <h1>Marathon Timer Control by Athoillah</h1>
     <div id="controls"></div>
 
-    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
-    <script>
-    const socket = io(); // Cukup begini saja jika sudah menggunakan link CDN yang benar
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script>
+  const socket = io(); // Biarkan kosong agar otomatis mendeteksi URL Railway
 
-		// Tambahkan ini untuk mengecek koneksi di Inspect Console
-		socket.on('connect', () => {
-    	console.log('Terhubung ke server Railway!');
-		});
-		socket.emit('requestSync'); // Tambahkan baris ini
-		socket.on('connect_error', (err) => {
-    	console.log('Gagal konek:', err);
-		});		
-        let localTimers = {};
-        let isRendered = false;
+  let localTimers = {};
+  let isRendered = false;
 
-        socket.on('sync', (data) => { 
-            localTimers = data; 
-            if (!isRendered) {
-                initialRender();
-                isRendered = true;
-            }
-        });
+  socket.on('connect', () => {
+    console.log('Sukses terhubung ke Railway!');
+    socket.emit('requestSync');
+  });
 
-        // Hanya menggambar struktur kartu SEKALI saja
-        function initialRender() {
-            const container = document.getElementById('controls');
-            container.innerHTML = '';
-            for (let id in localTimers) {
-                const t = localTimers[id];
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.innerHTML = `
-                    <div style="margin-bottom: 15px; width: 100%;">
-                        <label style="font-size: 30px; color: #FFFF;">Nama Kategori :</label>
-                        <input type="text" id="name-${id}" class="name-input" value="${t.name}" oninput="updateCategoryName('${id}')">
-                    </div>
-                    <input type="text" id="input-${id}" class="timer-val" value="00:00:00">
-                    <div class="btn-group">
-                        <button class="btn-start" onclick="send('${id}', 'start')">START</button>
-                        <button class="btn-pause" onclick="send('${id}', 'pause')">PAUSE</button>
-                        <button class="btn-edit" onclick="manualEdit('${id}')">SET</button>
-                        <button class="btn-reset" onclick="send('${id}', 'reset')">RESET</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            }
-        }
+  socket.on('sync', (data) => {
+    console.log('Data diterima:', data);
+    localTimers = data;
+    // Panggil fungsi gambar UI
+    initialRender(); 
+  });
 
-        // Fungsi ini hanya memperbarui angka, tanpa menulis ulang HTML (Anti-Refresh)
-        function updateTimerValues() {
-            for (let id in localTimers) {
-                const inputElement = document.getElementById(`input-${id}`);
-                // Hanya update jika admin sedang tidak mengetik/fokus di kotak timer tersebut
-                if (document.activeElement !== inputElement) {
-                    inputElement.value = format(getMs(id));
-                }
-            }
-        }
+  function initialRender() {
+    const container = document.getElementById('controls');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    for (let id in localTimers) {
+      const t = localTimers[id];
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style = "border: 1px solid #ccc; margin: 10px; padding: 10px; border-radius: 8px;";
+      div.innerHTML = `
+        <h3>${t.name}</h3>
+        <button onclick="sendControl('${id}', 'start')">Start</button>
+        <button onclick="sendControl('${id}', 'pause')">Pause</button>
+        <button onclick="sendControl('${id}', 'reset')">Reset</button>
+      `;
+      container.appendChild(div);
+    }
+  }
 
-        function getMs(id) {
-            let t = localTimers[id];
-            return t.elapsed + (t.isRunning ? Date.now() - t.startTime : 0);
-        }
-
-        function format(ms) {
-            let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
-            let m = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-            let s = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-            return `${h}:${m}:${s}`;
-        }
-
-        function send(id, command) { socket.emit('controlTimer', { id, command }); }
-
-        function updateCategoryName(id) {
-            const newName = document.getElementById(`name-${id}`).value;
-            socket.emit('controlTimer', { id, command: 'updateName', newName: newName });
-        }
-
-        function manualEdit(id) {
-            const val = document.getElementById(`input-${id}`).value;
-            const parts = val.split(':');
-            if(parts.length !== 3) return alert("Format: hh:mm:ss");
-            const ms = (parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2])) * 1000;
-            socket.emit('controlTimer', { id, command: 'edit', manualTime: ms });
-        }
-
-        // Jalankan update angka setiap 100ms agar smooth tapi tidak merusak input
-        setInterval(updateTimerValues, 100);
-    </script>
+  function sendControl(id, command) {
+    socket.emit('controlTimer', { id, command });
+  }
+</script>
 </body>
 </html>
