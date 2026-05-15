@@ -24,12 +24,21 @@ let timers = {
 // ... kode setup server lainnya tetap sama ...
 
 io.on('connection', (socket) => {
+    console.log('User connected');
+
+    // 1. Kirim data saat pertama kali konek
     socket.emit('sync', timers);
 
-    socket.on('controlTimer', (data) => {
-        const { id, command, manualTime, newName } = data; 
-        let t = timers[id];
+    // 2. Listener untuk permintaan sinkronisasi manual dari Admin
+    socket.on('requestSync', () => {
+        socket.emit('sync', timers);
+    });
 
+    // 3. Listener untuk kontrol timer (Start, Pause, Reset)
+    socket.on('controlTimer', (data) => {
+        const { id, command, manualTime, newName } = data;
+        let t = timers[id];
+      
         if (command === 'start' && !t.isRunning) {
             t.startTime = Date.now();
             t.isRunning = true;
@@ -50,4 +59,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
+server.listen(PORT, () => console.log(`Server Pro V2 jalan di port ${PORT}`));
