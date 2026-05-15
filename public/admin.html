@@ -64,16 +64,18 @@
     <div id="controls"></div>
 	<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 <script>
-  const socket = io(); 
+    const socket = io({
+        transports: ['polling', 'websocket'] // Polling dulu sebagai cadangan jika WS gagal
+    });
 
-  socket.on('connect', () => {
-    console.log('Terhubung ke server!');
-    socket.emit('requestSync');
-  });
+    socket.on('connect', () => {
+        console.log('Terhubung ke Railway!');
+        socket.emit('requestSync');
+    });
 
-  socket.on('sync', (data) => {
-    const container = document.getElementById('controls');
-    if (!container) return;
+    socket.on('sync', (data) => {
+        // Logika render UI kamu di sini
+    });
     
     container.innerHTML = '';
     for (let id in data) {
