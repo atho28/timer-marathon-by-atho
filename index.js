@@ -26,23 +26,35 @@ io.on('connection', (socket) => {
     socket.emit('sync', timers);
   });
 
-  socket.on('controlTimer', (data) => {
-    const { id, command } = data;
+  // Ganti bagian socket.on('controlTimer', ...) dengan ini:
+socket.on('controlTimer', (data) => {
+    const { id, command, manualTime, newName } = data;
     if (timers[id]) {
-      if (command === 'start' && !timers[id].isRunning) {
-        timers[id].startTime = Date.now();
-        timers[id].isRunning = true;
-      } else if (command === 'pause' && timers[id].isRunning) {
-        timers[id].elapsed += Date.now() - timers[id].startTime;
-        timers[id].isRunning = false;
-      } else if (command === 'reset') {
-        timers[id].elapsed = 0;
-        timers[id].isRunning = false;
-        timers[id].startTime = null;
-      }
-      io.emit('sync', timers);
+        if (command === 'start' && !timers[id].isRunning) {
+            timers[id].startTime = Date.now();
+            timers[id].isRunning = true;
+        } else if (command === 'pause' && timers[id].isRunning) {
+            timers[id].elapsed += Date.now() - timers[id].startTime;
+            timers[id].isRunning = false;
+        } else if (command === 'reset') {
+            timers[id].elapsed = 0;
+            timers[id].isRunning = false;
+            timers[id].startTime = null;
+        } 
+        // FITUR BARU: Edit Waktu Manual
+        else if (command === 'edit') {
+            timers[id].elapsed = manualTime;
+            // Jika sedang jalan, reset startTime ke jam sekarang agar perhitungan tidak lompat
+            if (timers[id].isRunning) timers[id].startTime = Date.now();
+        }
+        // FITUR BARU: Update Nama Kategori
+        else if (command === 'updateName') {
+            timers[id].name = newName;
+        }
+        
+        io.emit('sync', timers);
     }
-  });
+});
 });
 
 // PENTING: Gunakan 0.0.0.0 agar bisa diakses dari luar Railway
