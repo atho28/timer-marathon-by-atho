@@ -51,6 +51,25 @@ socket.on('controlTimer', (data) => {
         else if (command === 'updateName') {
             timers[id].name = newName;
         }
+      // Cari bagian socket.on('controlTimer', ...) dan tambahkan kondisi ini:
+socket.on('controlTimer', (data) => {
+    const { id, command, manualTime, newName } = data;
+
+    // FITUR BARU: Reset All Categories
+    else if (command === 'resetAll') {
+        for (let key in timers) {
+            timers[key].elapsed = 0;
+            timers[key].isRunning = false;
+            timers[key].startTime = null;
+        }
+        io.emit('sync', timers);
+        return; // Keluar dari fungsi agar tidak mencari id
+    }
+
+    if (timers[id]) {
+        // ... kode start, pause, reset, edit, updateName yang sudah ada ...
+    }
+});
         
         io.emit('sync', timers);
     }
