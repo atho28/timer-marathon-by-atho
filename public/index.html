@@ -118,9 +118,9 @@
         </div>
 
         <div class="section">
-            <label>BACKGROUND IMAGE</label>
-            <input type="file" accept="image/png, image/jpeg" onchange="applyBgImage(event)">
-            <button onclick="clearBgImage()" style="width:100%; margin-top:5px; font-size:10px;">Reset to Solid Color</button>
+        <label>BACKGROUND MEDIA (Image/Video)</label>
+        <input type="file" id="bgInput" accept="image/*, video/mp4, video/webm" onchange="applyBgMedia(event)">
+        <button onclick="clearBgMedia()" style="width:100%; margin-top:5px; font-size:10px;">Reset to Solid Color</button>
         </div>
 
         <button onclick="toggleMenu()" style="width:100%; background: #dc3545; color: white; border:none; padding:10px; border-radius:4px; cursor:pointer;">CLOSE</button>
@@ -154,15 +154,38 @@
             document.body.style.backgroundImage = 'none';
             document.documentElement.style.setProperty('--bg-color', val); 
         }
-        function applyBgImage(event) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                document.body.style.backgroundImage = `url('${reader.result}')`;
-            }
-            reader.readAsDataURL(event.target.files[0]);
-        }
-        function clearBgImage() { document.body.style.backgroundImage = 'none'; }
+        function applyBgMedia(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    const videoElement = document.getElementById('bgVideo');
 
+    reader.onload = function(e) {
+        if (file.type.includes('video')) {
+            // Jika file adalah Video
+            document.body.style.backgroundImage = 'none';
+            videoElement.src = e.target.result;
+            videoElement.style.display = 'block';
+            videoElement.play();
+        } else {
+            // Jika file adalah Gambar
+            videoElement.style.display = 'none';
+            videoElement.pause();
+            document.body.style.backgroundImage = `url('${e.target.result}')`;
+        }
+    }
+    
+    if (file) {
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearBgMedia() {
+    const videoElement = document.getElementById('bgVideo');
+    videoElement.style.display = 'none';
+    videoElement.pause();
+    videoElement.src = "";
+    document.body.style.backgroundImage = 'none';
+}
         // --- LOGIKA TIMER ---
         socket.on('sync', (data) => { localTimers = data; });
 
@@ -194,5 +217,8 @@
         }
         update();
     </script>
+<video id="bgVideo" autoplay muted loop 
+style="position: fixed; top: 0; left: 0; min-width: 100%; min-height: 100%; z-index: -1; object-fit: cover; display: none;">
+</video>
 </body>
 </html>
