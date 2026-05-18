@@ -138,7 +138,16 @@
         }
 
         // --- FUNGSI PENGATURAN TAMPILAN ---
-        function applyFont(val) { document.documentElement.style.setProperty('--font-family', val); }
+        function applyFont(val) {
+        const customInput = document.getElementById('customFontInput');
+        
+        if (val === 'custom') {
+            customInput.style.display = 'block';
+        } else {
+            customInput.style.display = 'none';
+            document.documentElement.style.setProperty('--font-family', val);
+        }
+    }
         function applyColor(val) { document.documentElement.style.setProperty('--font-color', val); }
         function applySize(val) { document.documentElement.style.setProperty('--font-size', val + 'px'); }
         function applyBgColor(val) { 
