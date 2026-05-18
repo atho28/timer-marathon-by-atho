@@ -80,10 +80,31 @@
         <h3 style="margin-top:0">Display Settings</h3>
         
         <div class="section">
-            <label>FONT FAMILY (System/Custom)</label>
-            <input type="text" id="fontInput" placeholder="Contoh: Arial, Impact, Montserrat" oninput="applyFont(this.value)">
-            <p style="font-size:10px; color: #777">*Ketik nama font yang terinstall di OS Anda</p>
-        </div>
+    <label>PILIH FONT STYLE</label>
+    <select id="fontSelect" onchange="applyFont(this.value)">
+        <optgroup label="Standard Fonts">
+            <option value="'Segoe UI', sans-serif">Segoe UI (Default)</option>
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="'Times New Roman', serif">Times New Roman</option>
+            <option value="Verdana, sans-serif">Verdana</option>
+            <option value="Courier New, monospace">Courier New</option>
+        </optgroup>
+        <optgroup label="Display Fonts (Pastikan Font Terinstall)">
+            <option value="Impact, Charcoal, sans-serif">Impact (Bold Look)</option>
+            <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+            <option value="'Montserrat', sans-serif">Montserrat</option>
+            <option value="'Roboto', sans-serif">Roboto</option>
+            <option value="'Open Sans', sans-serif">Open Sans</option>
+            <option value="Georgia, serif">Georgia</option>
+        </optgroup>
+        <optgroup label="Custom Input">
+            <option value="custom">-- Ketik Manual (Custom) --</option>
+        </optgroup>
+    </select>
+    
+    <input type="text" id="customFontInput" placeholder="Ketik nama font spesifik..." 
+           style="display:none; margin-top:5px;" oninput="applyFont(this.value)">
+</div>
 
         <div class="section">
             <label>FONT COLOR & SIZE</label>
