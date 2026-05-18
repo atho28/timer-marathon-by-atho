@@ -144,7 +144,7 @@ function updateCategoryName(id) {
     });
 }
 function resetAll() {
-    if (confirm("Apakah Anda yakin ingin meriset SEMUA timer? Tindakan ini tidak bisa dibatalkan.")) {
+    if (confirm("Apakah Anda yakin ingin RESET SEMUA TIMER? Tindakan ini tidak bisa dibatalkan.")) {
         socket.emit('controlTimer', { command: 'resetAll' });
     }
 }
