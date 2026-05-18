@@ -61,6 +61,18 @@
 </head>
 <body>
     <h1>Marathon Timer Control by Athoillah</h1>
+<div style="text-align: center; margin-bottom: 30px;">
+    <button onclick="resetAll()" style="background: #b71c1c; color: white; padding: 15px 30px; font-size: 1.2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+        ⚠ RESET ALL CATEGORIES
+    </button>
+	function resetAll() {
+    if (confirm("Apakah Anda yakin ingin meriset SEMUA timer? Tindakan ini tidak bisa dibatalkan.")) {
+        socket.emit('controlTimer', { command: 'resetAll' });
+    }
+}
+</div>
+	
+<div id="controls"></div>
     <div id="controls"></div>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
