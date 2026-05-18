@@ -29,6 +29,17 @@ io.on('connection', (socket) => {
   // Ganti bagian socket.on('controlTimer', ...) dengan ini:
 socket.on('controlTimer', (data) => {
     const { id, command, manualTime, newName } = data;
+  // FITUR BARU: Reset All Categories
+    if (command === 'resetAll') {
+        for (let key in timers) {
+            timers[key].elapsed = 0;
+            timers[key].isRunning = false;
+            timers[key].startTime = null;
+        }
+        io.emit('sync', timers);
+        return; // Keluar dari fungsi agar tidak mencari id
+    }
+  
     if (timers[id]) {
         if (command === 'start' && !timers[id].isRunning) {
             timers[id].startTime = Date.now();
@@ -54,17 +65,6 @@ socket.on('controlTimer', (data) => {
       // Cari bagian socket.on('controlTimer', ...) dan tambahkan kondisi ini:
 socket.on('controlTimer', (data) => {
     const { id, command, manualTime, newName } = data;
-
-    // FITUR BARU: Reset All Categories
-    else if (command === 'resetAll') {
-        for (let key in timers) {
-            timers[key].elapsed = 0;
-            timers[key].isRunning = false;
-            timers[key].startTime = null;
-        }
-        io.emit('sync', timers);
-        return; // Keluar dari fungsi agar tidak mencari id
-    }
 
     if (timers[id]) {
         // ... kode start, pause, reset, edit, updateName yang sudah ada ...
