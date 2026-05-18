@@ -1,121 +1,146 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Display Vmix - Center Aligned</title>
+    <title>Display Vmix Pro - Athoillah</title>
     <style>
+        :root {
+            --bg-color: #000000;
+            --font-color: #ffffff;
+            --font-size: 80px;
+            --font-family: 'Segoe UI', sans-serif;
+        }
+
         body { 
-            background-color: #000000; 
-            color: #ffffff; 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            margin: 0; 
-            padding: 0;
-            height: 100vh; /* Mengambil seluruh tinggi layar */
+            background-color: var(--bg-color);
+            background-size: cover;
+            background-position: center;
+            color: var(--font-color);
+            font-family: var(--font-family);
+            margin: 0; padding: 0;
+            height: 100vh;
             display: flex;
-            justify-content: center; /* Mengetengahkan secara horizontal */
-            align-items: center;     /* Mengetengahkan secara vertikal */
-            overflow: hidden;
-        }
-        
-
-    #display-container {
-        display: flex;
-        flex-direction: column;
-        gap: 20px; 
-        width: 90%; /* Memberi sedikit ruang di pinggir layar */
-    }
-
-    .timer-row { 
-        display: flex; 
-        flex-direction: row; /* Kembali ke baris, bukan kolom */
-        align-items: center; 
-        justify-content: flex-start; /* Container utama mulai dari kiri */
-        border-bottom: 1px solid #222; /* Garis tipis antar kategori */
-        padding: 10px 0;
-    }
-
-    .label { 
-        font-size: 24px; 
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: #aaaaaa;
-        text-align: left; /* Teks label rata kiri */
-        flex: 0 0 30%; /* Label mengambil 30% lebar layar (tetap/fixed) */
-        padding-left: 50px; /* Jarak dari pinggir layar kiri */
-    }
-
-    .time { 
-        font-size: 120px; 
-        font-weight: bold; 
-        font-variant-numeric: tabular-nums;
-        flex: 1; /* Mengambil seluruh sisa ruang yang ada */
-        text-align: center; /* Mengetengahkan angka di sisa ruang tersebut */
-        margin-right: 30%; /* Offset penyeimbang agar angka benar-benar di tengah page */
-    }
-
-    .milidetik {
-        font-size: 45px;
-        color: #666;
-    }
-    
-
-        #font-panel { 
-            position: fixed; 
-            top: 200px; 
-            left: 150px; 
-            background: rgba(45, 45, 45, 0.8); 
-            padding: 10px; 
-            border-radius: 8px;
-            display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 10px;
-            z-index: 100;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
 
-        select {
-            background: #111;
+        /* --- STYLING TAB MENU --- */
+        #settings-menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #444;
             color: white;
-            border: 1px solid #555;
-            padding: 5px;
-            border-radius: 4px;
+            z-index: 1000;
+            width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: translateX(-120%); /* Hide by default */
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
+        #settings-menu.visible {
+            transform: translateX(0);
+        }
+
+        .menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #3d5afe;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1001;
+        }
+
+        .section { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .section label { display: block; font-size: 12px; margin-bottom: 5px; color: #aaa; }
+        input, select { width: 100%; padding: 8px; background: #333; border: 1px solid #555; color: white; border-radius: 4px; margin-bottom: 5px; }
+
+        /* --- DISPLAY LAYOUT --- */
+        #display-container { width: 90%; display: flex; flex-direction: column; gap: 30px; }
+        .timer-row { display: flex; align-items: center; justify-content: space-between; }
+        .label { font-size: calc(var(--font-size) * 0.4); opacity: 0.7; }
+        .time { font-size: var(--font-size); font-weight: bold; }
+        .milidetik { font-size: 0.6em; opacity: 0.8; }
     </style>
 </head>
 <body>
 
-    <div id="display-container"></div>
+    <button class="menu-toggle" onclick="toggleMenu()">☰ MENU</button>
 
-    <div id="font-panel">
-        <label style="font-size: 10px;">FONT:</label>
-        <select id="font-selector" onchange="changeFont(this.value)">
-            <optgroup label="Standard Windows">
-                <option value="'Segoe UI', sans-serif">Segoe UI</option>
-                <option value="Arial, sans-serif">Arial</option>
-                <option value="'Arial Black', sans-serif">Arial Black</option>
-                <option value="Impact, sans-serif">Impact</option>
-            </optgroup>
-            <optgroup label="Digital">
-                <option value="'Courier New', monospace">Courier New</option>
-                <option value="Consolas, monospace">Consolas</option>
-				<option value="monserrat">Monserrat</option>
-            </optgroup>
-        </select>
+    <div id="settings-menu">
+        <h3 style="margin-top:0">Display Settings</h3>
+        
+        <div class="section">
+            <label>FONT FAMILY (System/Custom)</label>
+            <input type="text" id="fontInput" placeholder="Contoh: Arial, Impact, Montserrat" oninput="applyFont(this.value)">
+            <p style="font-size:10px; color: #777">*Ketik nama font yang terinstall di OS Anda</p>
+        </div>
+
+        <div class="section">
+            <label>FONT COLOR & SIZE</label>
+            <input type="color" onchange="applyColor(this.value)" value="#ffffff">
+            <input type="range" min="20" max="250" value="80" oninput="applySize(this.value)">
+        </div>
+
+        <div class="section">
+            <label>BACKGROUND COLOR (Solid)</label>
+            <input type="color" onchange="applyBgColor(this.value)" value="#000000">
+        </div>
+
+        <div class="section">
+            <label>BACKGROUND IMAGE</label>
+            <input type="file" accept="image/png, image/jpeg" onchange="applyBgImage(event)">
+            <button onclick="clearBgImage()" style="width:100%; margin-top:5px; font-size:10px;">Reset to Solid Color</button>
+        </div>
+
+        <button onclick="toggleMenu()" style="width:100%; background: #dc3545; color: white; border:none; padding:10px; border-radius:4px; cursor:pointer;">CLOSE</button>
     </div>
+
+    <div id="display-container"></div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         let localTimers = {};
 
-        socket.on('sync', (data) => { localTimers = data; });
-
-        function changeFont(font) {
-            document.body.style.fontFamily = font;
+        function toggleMenu() {
+            document.getElementById('settings-menu').classList.toggle('visible');
         }
+
+        // --- FUNGSI PENGATURAN TAMPILAN ---
+        function applyFont(val) { document.documentElement.style.setProperty('--font-family', val); }
+        function applyColor(val) { document.documentElement.style.setProperty('--font-color', val); }
+        function applySize(val) { document.documentElement.style.setProperty('--font-size', val + 'px'); }
+        function applyBgColor(val) { 
+            document.body.style.backgroundImage = 'none';
+            document.documentElement.style.setProperty('--bg-color', val); 
+        }
+        function applyBgImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.body.style.backgroundImage = `url('${reader.result}')`;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+        function clearBgImage() { document.body.style.backgroundImage = 'none'; }
+
+        // --- LOGIKA TIMER ---
+        socket.on('sync', (data) => { localTimers = data; });
 
         function update() {
             const container = document.getElementById('display-container');
-            let content = '';
+            if (!container) return;
             
+            let content = '';
             for (let id in localTimers) {
                 let t = localTimers[id];
                 let ms = t.elapsed + (t.isRunning ? Date.now() - t.startTime : 0);
