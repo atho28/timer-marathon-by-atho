@@ -127,18 +127,39 @@
 
         function send(id, command) { socket.emit('controlTimer', { id, command }); }
 
-        function updateCategoryName(id) {
-            const newName = document.getElementById(`name-${id}`).value;
-            socket.emit('controlTimer', { id, command: 'updateName', newName: newName });
-        }
+        // Fungsi untuk kirim update nama ke server saat admin mengetik
+function updateCategoryName(id) {
+    const newName = document.getElementById(`name-${id}`).value;
+    socket.emit('controlTimer', { 
+        id: id, 
+        command: 'updateName', 
+        newName: newName 
+    });
+}
 
-        function manualEdit(id) {
-            const val = document.getElementById(`input-${id}`).value;
-            const parts = val.split(':');
-            if(parts.length !== 3) return alert("Format: hh:mm:ss");
-            const ms = (parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2])) * 1000;
-            socket.emit('controlTimer', { id, command: 'edit', manualTime: ms });
-        }
+// Fungsi untuk set waktu manual (Format hh:mm:ss)
+function manualEdit(id) {
+    const val = document.getElementById(`input-${id}`).value;
+    const parts = val.split(':');
+    
+    if(parts.length !== 3) {
+        return alert("Gunakan format hh:mm:ss (Contoh: 01:30:00)");
+    }
+
+    // Konversi jam:menit:detik ke Milidetik
+    const hrs = parseInt(parts[0]) || 0;
+    const mins = parseInt(parts[1]) || 0;
+    const secs = parseInt(parts[2]) || 0;
+    const totalMs = (hrs * 3600 + mins * 60 + secs) * 1000;
+
+    socket.emit('controlTimer', { 
+        id: id, 
+        command: 'edit', 
+        manualTime: totalMs 
+    });
+    
+    alert(`Waktu ${localTimers[id].name} berhasil diatur!`);
+}
 
         // Jalankan update angka setiap 100ms agar smooth tapi tidak merusak input
         setInterval(updateTimerValues, 100);
